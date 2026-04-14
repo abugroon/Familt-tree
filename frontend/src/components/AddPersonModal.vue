@@ -53,6 +53,17 @@
             />
           </div>
 
+          <div>
+            <label class="block text-xs font-medium text-gray-500 dark:text-slate-400 mb-1.5">وصف او ملاحظات</label>
+            <textarea
+              v-model="form.description"
+              type="text"
+              placeholder="اكتب اي وصف او ملاحظات تريد ان تظهر مع اسم الشخص المضاف"
+              required
+              class="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-600 focus:outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 dark:focus:ring-violet-900/30 text-sm"
+            />
+          </div>
+
           <!-- Gender -->
           <div>
             <label class="block text-xs font-medium text-gray-500 dark:text-slate-400 mb-1.5">{{ $t('person.gender') }} *</label>
@@ -330,6 +341,7 @@ const editMode = computed(() => !!props.editPerson)
 
 const form = ref({
   name: '',
+  description: '',
   gender: '',
   birth_date: '',
   death_date: '',
@@ -341,6 +353,7 @@ watch(() => props.editPerson, (val) => {
     form.value = {
       name: val.name || '',
       gender: val.gender || '',
+      description: val.description || '',
       birth_date: val.birth_date ? val.birth_date.split('T')[0] : '',
       death_date: val.death_date ? val.death_date.split('T')[0] : '',
       parent_id: val.parent_id || '',
@@ -377,6 +390,7 @@ async function submit() {
   try {
     const fd = new FormData()
     fd.append('name', form.value.name)
+    fd.append('description', form.value.description)
     fd.append('gender', form.value.gender)
     if (form.value.birth_date) fd.append('birth_date', form.value.birth_date)
     if (form.value.death_date) fd.append('death_date', form.value.death_date)

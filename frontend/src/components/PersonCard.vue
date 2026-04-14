@@ -1,5 +1,6 @@
 <template>
   <div
+      style="width: 150px"
     class="person-card group relative cursor-pointer select-none"
     :class="isDeceased ? 'opacity-70' : ''"
     @mousedown.stop
@@ -14,6 +15,7 @@
     <!-- Card -->
     <div
       class="relative rounded-2xl border p-4 flex flex-col items-center gap-2.5 w-44 bg-white dark:bg-slate-800/80 shadow-sm group-hover:shadow-lg transition-shadow duration-300"
+      style="width: 225px"
       :class="isDeceased
         ? 'border-gray-200 dark:border-slate-600/50'
         : isMale
@@ -49,21 +51,16 @@
             {{ initials }}
           </div>
         </div>
-        <!-- Status dot -->
-        <div
-          class="absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-white dark:border-slate-800"
-          :class="isDeceased ? 'bg-gray-400' : 'bg-emerald-400'"
-        ></div>
       </div>
 
       <!-- Name + gender -->
       <div class="text-center w-full">
         <div class="flex items-center justify-center gap-1 mb-1">
           <span
-            class="text-sm font-semibold leading-tight line-clamp-1"
+            class="font-semibold leading-tight line-clamp-1"
             :class="isDeceased ? 'text-gray-500 dark:text-slate-500' : 'text-gray-800 dark:text-white'"
           >{{ person.name }}</span>
-          <span class="text-sm flex-shrink-0">{{ person.gender === 'male' ? '👨' : '👩' }}</span>
+<!--          <span class="text-sm flex-shrink-0">{{ person.gender === 'male' ? '👨' : '👩' }}</span>-->
         </div>
 
         <!-- Age -->
@@ -92,11 +89,14 @@
             </template>
           </div>
 
-          <div v-if="!person.death_date" class="flex items-center justify-center gap-1">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
-            <span class="text-emerald-500 dark:text-emerald-400 font-medium">{{ $t('person.alive') }}</span>
-          </div>
-          <div v-else class="text-gray-400 dark:text-slate-500 text-xs">{{ $t('person.deceased') }}</div>
+          <template v-if="person.death_date ||person.birth_date ">
+            <div v-if="!person.death_date" class="flex items-center justify-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
+              <span class="text-emerald-500 dark:text-emerald-400 font-medium">{{ $t('person.alive') }}</span>
+            </div>
+            <div v-else class="text-gray-400 dark:text-slate-500 text-xs">{{ $t('person.deceased') }}</div>
+          </template>
+
         </div>
       </div>
 

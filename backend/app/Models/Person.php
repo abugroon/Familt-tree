@@ -10,6 +10,7 @@ class Person extends Model
 {
     protected $fillable = [
         'name',
+        'description',
         'gender',
         'birth_date',
         'death_date',

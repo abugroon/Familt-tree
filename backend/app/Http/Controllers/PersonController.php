@@ -19,12 +19,13 @@ class PersonController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'name'       => 'required|string|max:255',
-            'gender'     => 'required|in:male,female',
+            'name' => 'required|string|max:255',
+            'description' => 'sometimes',
+            'gender' => 'required|in:male,female',
             'birth_date' => 'nullable|date',
             'death_date' => 'nullable|date',
-            'parent_id'  => 'nullable|exists:people,id',
-            'photo'      => 'nullable|image|max:2048',
+            'parent_id' => 'nullable|exists:people,id',
+            'photo' => 'nullable|image|max:2048',
         ]);
 
         if ($request->hasFile('photo')) {
@@ -49,12 +50,13 @@ class PersonController extends Controller
         $person = Person::where('user_id', auth()->id())->findOrFail($id);
 
         $validated = $request->validate([
-            'name'       => 'sometimes|string|max:255',
-            'gender'     => 'sometimes|in:male,female',
+            'name' => 'sometimes|string|max:255',
+            'description' => 'sometimes',
+            'gender' => 'sometimes|in:male,female',
             'birth_date' => 'nullable|date',
             'death_date' => 'nullable|date',
-            'parent_id'  => 'nullable|exists:people,id',
-            'photo'      => 'nullable|image|max:2048',
+            'parent_id' => 'nullable|exists:people,id',
+            'photo' => 'nullable|image|max:2048',
         ]);
 
         if ($request->hasFile('photo')) {
@@ -97,7 +99,7 @@ class PersonController extends Controller
     {
         $user = User::where('share_token', $token)->first();
 
-        if (! $user) {
+        if (!$user) {
             return response()->json(['message' => 'Share link not found'], 404);
         }
 
