@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(composer create-project:*)",
+      "Bash(npm create:*)",
+      "Bash(php artisan:*)",
+      "Bash(npm install:*)",
+      "Bash(npx vite:*)",
+      "Bash(curl -s http://localhost:8000/api/tree)",
+      "Bash(curl -s http://localhost:8000/api/people)",
+      "Bash(python -c \"import sys,json; data=json.load\\(sys.stdin\\); print\\(f'Total: {len\\(data\\)} people'\\)\")",
+      "Bash(node -e \"const d=require\\('fs'\\).readFileSync\\('/dev/stdin','utf8'\\); console.log\\('Total:', JSON.parse\\(d\\).length, 'people'\\)\")",
+      "Bash(curl -s \"http://localhost:8000/api/people\")",
+      "Bash(findstr /c:\"\\\\\"id\\\\\"\")",
+      "Bash(curl:*)",
+      "Bash(node -e \"process.stdin.resume\\(\\); let d=''; process.stdin.on\\('data', c=>d+=c\\); process.stdin.on\\('end', \\(\\)=>{ const t=JSON.parse\\(d\\); console.log\\(t[0].name, '| birth:', t[0].birth_date?.slice\\(0,10\\), '| children:', t[0].children.length\\) }\\)\")"
+    ]
+  }
+}

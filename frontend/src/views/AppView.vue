@@ -1,0 +1,390 @@
+<template>
+  <div class="min-h-screen bg-gray-50 dark:bg-slate-950">
+    <!-- Header -->
+    <header class="sticky top-0 z-40 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-700/60 shadow-sm">
+      <div class="max-w-screen-2xl mx-auto px-6 py-3.5 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-md">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+          </div>
+          <div>
+            <h1 class="text-lg font-bold text-gray-900 dark:text-white leading-none">{{ $t('app.title') }}</h1>
+            <p class="text-xs text-gray-400 dark:text-slate-500 leading-none mt-0.5">{{ $t('app.subtitle') }}</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <!-- Members count -->
+          <div v-if="store.allPeople.length" class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-slate-800 border border-gray-200 dark:border-slate-700">
+            <svg class="w-3.5 h-3.5 text-violet-500" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+            </svg>
+            <span class="text-xs text-gray-600 dark:text-slate-300 font-medium">{{ $t('app.members', { n: store.allPeople.length }) }}</span>
+          </div>
+
+          <!-- Theme toggle -->
+          <button
+            @click="themeToggle"
+            class="w-9 h-9 rounded-xl flex items-center justify-center border transition-all active:scale-95
+              bg-gray-100 dark:bg-slate-800 border-gray-200 dark:border-slate-700
+              text-gray-500 dark:text-slate-400 hover:text-gray-800 dark:hover:text-white
+              hover:bg-gray-200 dark:hover:bg-slate-700"
+            :title="isDark ? $t('app.lightMode') : $t('app.darkMode')"
+          >
+            <svg v-if="isDark" class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z" />
+            </svg>
+            <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+          </button>
+
+          <!-- Language toggle -->
+          <button
+            @click="toggleLocale"
+            class="w-9 h-9 rounded-xl flex items-center justify-center border transition-all active:scale-95
+              bg-gray-100 dark:bg-slate-800 border-gray-200 dark:border-slate-700
+              text-gray-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700
+              text-xs font-bold"
+            :title="locale === 'ar' ? 'English' : 'عربي'"
+          >
+            {{ locale === 'ar' ? 'EN' : 'ع' }}
+          </button>
+
+          <!-- Export Image -->
+          <button
+            @click="familyTreeRef?.exportImage()"
+            class="w-9 h-9 rounded-xl flex items-center justify-center border transition-all active:scale-95
+              bg-gray-100 dark:bg-slate-800 border-gray-200 dark:border-slate-700
+              text-gray-500 dark:text-slate-400 hover:text-gray-800 dark:hover:text-white
+              hover:bg-gray-200 dark:hover:bg-slate-700"
+            :title="$t('actions.exportImage')"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </button>
+
+          <!-- Add Person -->
+          <button
+            @click="showAddModal = true"
+            class="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white text-sm font-semibold shadow-md shadow-violet-200 dark:shadow-violet-900/40 hover:shadow-violet-300 active:scale-95"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+            </svg>
+            {{ $t('actions.addPersonTitle') }}
+          </button>
+
+          <!-- User dropdown -->
+          <div class="relative" ref="userDropdownRef">
+            <button
+              @mousedown.stop="toggleUserDropdown"
+              class="flex items-center gap-2 px-3 py-2 rounded-xl border transition-all active:scale-95
+                bg-gray-100 dark:bg-slate-800 border-gray-200 dark:border-slate-700
+                text-gray-700 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700"
+            >
+              <div class="w-6 h-6 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold">
+                {{ authStore.user?.name?.charAt(0)?.toUpperCase() || 'U' }}
+              </div>
+              <span class="text-sm font-medium hidden sm:block max-w-[100px] truncate">{{ authStore.user?.name }}</span>
+              <svg class="w-3.5 h-3.5 text-gray-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+
+            <!-- Dropdown menu -->
+            <Transition
+              enter-active-class="transition-all duration-150 ease-out"
+              enter-from-class="opacity-0 scale-95 translate-y-1"
+              enter-to-class="opacity-100 scale-100 translate-y-0"
+              leave-active-class="transition-all duration-100 ease-in"
+              leave-from-class="opacity-100 scale-100 translate-y-0"
+              leave-to-class="opacity-0 scale-95 translate-y-1"
+            >
+              <div
+                v-if="userDropdownOpen"
+                class="absolute end-0 top-full mt-2 w-72 bg-white dark:bg-slate-900 rounded-2xl shadow-xl shadow-gray-200/60 dark:shadow-slate-900/60 border border-gray-100 dark:border-slate-700/60 overflow-hidden z-50"
+              >
+                <!-- User info -->
+                <div class="px-4 py-3 border-b border-gray-100 dark:border-slate-700/60">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white font-bold">
+                      {{ authStore.user?.name?.charAt(0)?.toUpperCase() || 'U' }}
+                    </div>
+                    <div class="min-w-0">
+                      <p class="text-sm font-semibold text-gray-900 dark:text-white truncate">{{ authStore.user?.name }}</p>
+                      <p class="text-xs text-gray-500 dark:text-slate-400 truncate">{{ authStore.user?.email }}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Share link -->
+                <div class="px-4 py-3 border-b border-gray-100 dark:border-slate-700/60">
+                  <p class="text-xs font-medium text-gray-500 dark:text-slate-400 mb-2">{{ $t('auth.shareLink') }}</p>
+                  <div class="flex items-center gap-2">
+                    <div class="flex-1 min-w-0 px-2.5 py-1.5 rounded-lg bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-xs text-gray-600 dark:text-slate-300 truncate font-mono">
+                      {{ shareUrl }}
+                    </div>
+                    <button
+                      @click="copyShareLink"
+                      class="flex-shrink-0 p-1.5 rounded-lg bg-gray-100 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-500 dark:text-slate-400 hover:text-violet-600 dark:hover:text-violet-400 transition-colors"
+                      :title="$t('auth.copyLink')"
+                    >
+                      <svg v-if="!copied" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/>
+                      </svg>
+                      <svg v-else class="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                      </svg>
+                    </button>
+                  </div>
+                  <button
+                    @click="handleRegenerateLink"
+                    :disabled="regenerating"
+                    class="mt-2 w-full text-xs text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 font-medium flex items-center gap-1.5 justify-center py-1.5 rounded-lg hover:bg-violet-50 dark:hover:bg-violet-900/20 transition-colors disabled:opacity-50"
+                  >
+                    <svg class="w-3 h-3" :class="{ 'animate-spin': regenerating }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    {{ $t('auth.regenerateLink') }}
+                  </button>
+                </div>
+
+                <!-- Actions -->
+                <div class="p-2">
+                  <button
+                    @click="openChangePassword"
+                    class="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
+                  >
+                    <svg class="w-4 h-4 text-gray-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                    </svg>
+                    {{ $t('auth.changePassword') }}
+                  </button>
+
+                  <div class="my-1 border-t border-gray-100 dark:border-slate-700/60"></div>
+
+                  <button
+                    @click="handleLogout"
+                    class="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                    </svg>
+                    {{ $t('auth.logout') }}
+                  </button>
+                </div>
+              </div>
+            </Transition>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main -->
+    <main class="relative">
+      <!-- Loading -->
+      <div v-if="store.loading" class="flex flex-col items-center justify-center h-[80vh] gap-4">
+        <div class="w-12 h-12 rounded-full border-4 border-violet-200 dark:border-violet-800 border-t-violet-500 animate-spin"></div>
+        <p class="text-gray-400 dark:text-slate-500 text-sm">{{ $t('app.loading') }}</p>
+      </div>
+
+      <!-- Error -->
+      <div v-else-if="store.error" class="flex flex-col items-center justify-center h-[80vh] gap-4">
+        <div class="w-16 h-16 rounded-2xl bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/40 flex items-center justify-center">
+          <svg class="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.072 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          </svg>
+        </div>
+        <p class="text-red-500 font-medium">{{ $t('app.loadError') }}</p>
+        <button @click="store.fetchTrees()" class="px-4 py-2 rounded-lg bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 text-sm shadow-sm">
+          {{ $t('app.tryAgain') }}
+        </button>
+      </div>
+
+      <!-- Empty state -->
+      <div v-else-if="!store.trees.length" class="flex flex-col items-center justify-center h-[80vh] gap-6">
+        <div class="w-24 h-24 rounded-3xl bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700/50 flex items-center justify-center shadow-sm">
+          <svg class="w-12 h-12 text-gray-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+          </svg>
+        </div>
+        <div class="text-center">
+          <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-2">{{ $t('app.noMembers') }}</h2>
+          <p class="text-gray-400 dark:text-slate-500 text-sm">{{ $t('app.noMembersDesc') }}</p>
+        </div>
+        <button
+          @click="showAddModal = true"
+          class="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-semibold shadow-lg shadow-violet-200 dark:shadow-violet-900/40"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+          </svg>
+          {{ $t('app.addFirstMember') }}
+        </button>
+      </div>
+
+      <!-- Tree View -->
+      <div v-else style="height: calc(100vh - 65px);">
+        <FamilyTree
+          ref="familyTreeRef"
+          :trees="store.trees"
+          @person-click="openPersonDetails"
+        />
+      </div>
+    </main>
+
+    <!-- Floating Add Button (mobile) -->
+    <button
+      v-if="store.trees.length"
+      @click="showAddModal = true"
+      class="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-xl shadow-violet-300 flex items-center justify-center sm:hidden active:scale-90"
+    >
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+      </svg>
+    </button>
+
+    <!-- Modals -->
+    <AddPersonModal
+      v-if="showAddModal"
+      :people="store.allPeople"
+      @close="showAddModal = false"
+      @saved="onPersonSaved"
+    />
+
+    <PersonDetailsModal
+      v-if="selectedPerson"
+      :person="selectedPerson"
+      :people="store.allPeople"
+      @close="selectedPerson = null"
+      @edit="onEditPerson"
+      @deleted="onPersonDeleted"
+    />
+
+    <ChangePasswordModal
+      v-if="showChangePassword"
+      @close="showChangePassword = false"
+    />
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
+import { usePeopleStore } from '@/stores/people'
+import { useAuthStore } from '@/stores/auth.js'
+import { useTheme } from '@/composables/useTheme'
+import { applyLocaleDir } from '@/i18n/index.js'
+import FamilyTree from '@/components/FamilyTree.vue'
+import AddPersonModal from '@/components/AddPersonModal.vue'
+import PersonDetailsModal from '@/components/PersonDetailsModal.vue'
+import ChangePasswordModal from '@/components/ChangePasswordModal.vue'
+
+const router    = useRouter()
+const store     = usePeopleStore()
+const authStore = useAuthStore()
+const { isDark, toggle: themeToggle, init: initTheme } = useTheme()
+const { locale } = useI18n()
+
+const familyTreeRef     = ref(null)
+const showAddModal      = ref(false)
+const selectedPerson    = ref(null)
+const showChangePassword = ref(false)
+const userDropdownOpen  = ref(false)
+const userDropdownRef   = ref(null)
+const copied            = ref(false)
+const regenerating      = ref(false)
+
+const shareUrl = computed(() => {
+  const token = authStore.user?.share_token
+  return token ? `${window.location.origin}/share/${token}` : ''
+})
+
+function toggleLocale() {
+  locale.value = locale.value === 'ar' ? 'en' : 'ar'
+  localStorage.setItem('locale', locale.value)
+  applyLocaleDir(locale.value)
+}
+
+function toggleUserDropdown() {
+  userDropdownOpen.value = !userDropdownOpen.value
+}
+
+function handleClickOutside(e) {
+  if (userDropdownRef.value && !userDropdownRef.value.contains(e.target)) {
+    userDropdownOpen.value = false
+  }
+}
+
+async function copyShareLink() {
+  if (!shareUrl.value) return
+  try {
+    await navigator.clipboard.writeText(shareUrl.value)
+    copied.value = true
+    setTimeout(() => { copied.value = false }, 2000)
+  } catch {
+    // fallback
+  }
+}
+
+async function handleRegenerateLink() {
+  regenerating.value = true
+  try {
+    await authStore.regenerateShareToken()
+  } finally {
+    regenerating.value = false
+  }
+}
+
+function openChangePassword() {
+  userDropdownOpen.value = false
+  showChangePassword.value = true
+}
+
+async function handleLogout() {
+  userDropdownOpen.value = false
+  await authStore.logout()
+  router.push({ name: 'login' })
+}
+
+onMounted(async () => {
+  initTheme()
+  document.addEventListener('mousedown', handleClickOutside)
+  await Promise.all([
+    authStore.fetchMe(),
+    store.fetchTrees(),
+    store.fetchAllPeople(),
+  ])
+})
+
+onUnmounted(() => {
+  document.removeEventListener('mousedown', handleClickOutside)
+})
+
+function openPersonDetails(person) {
+  selectedPerson.value = person
+}
+
+async function onPersonSaved() {
+  showAddModal.value = false
+}
+
+function onEditPerson(person) {
+  selectedPerson.value = null
+}
+
+async function onPersonDeleted() {
+  selectedPerson.value = null
+}
+</script>
