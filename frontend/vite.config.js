@@ -13,6 +13,10 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
   },
+  build: {
+    outDir: '../backend/public/app',   // نخرج الـ build داخل Laravel public
+    emptyOutDir: true,
+  },
   server: {
     port: 5173,
     proxy: {
