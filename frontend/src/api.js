@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-export const api = axios.create({ baseURL: '/api' })
+export const api = axios.create({ baseURL: 'https://familyapi.moawiaabugroon.com/api' })
 
 api.interceptors.request.use(cfg => {
   const t = localStorage.getItem('auth_token')
