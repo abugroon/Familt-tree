@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import axios from 'axios'
 
-const api = axios.create({ baseURL: '/api' })
+const api = axios.create({ baseURL: 'https://familyapi.moawiaabugroon.com/api' })
 
 export const usePeopleStore = defineStore('people', () => {
   const trees = ref([])
