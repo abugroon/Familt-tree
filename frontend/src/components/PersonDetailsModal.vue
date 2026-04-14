@@ -53,41 +53,39 @@
             </span>
           </div>
         </div>
-
-        <!-- Avatar — overlapping banner -->
-        <div class="flex justify-between items-end px-6 -mt-12 mb-4">
-          <div
-              class="w-24 h-24 rounded-2xl overflow-hidden ring-4 ring-white dark:ring-slate-900 shadow-xl flex-shrink-0"
-              :class="isDeceased ? 'ring-gray-100 dark:ring-slate-800' : isMale ? 'ring-blue-50 dark:ring-slate-900' : 'ring-pink-50 dark:ring-slate-900'"
-          >
-            <img v-if="person.photo_url" :src="person.photo_url" :alt="person.name" class="w-full h-full object-cover"/>
-            <div v-else class="w-full h-full flex items-center justify-center text-3xl font-bold"
-                 :class="isDeceased
+        <!-- Scrollable content -->
+        <div class="px-6 pb-6 max-h-[55vh] overflow-y-auto space-y-4">
+          <!-- Avatar — overlapping banner -->
+          <div class="flex justify-between items-end mt-5">
+            <div
+                class="w-24 h-24 rounded-2xl overflow-hidden ring-4 ring-white dark:ring-slate-900 shadow-xl flex-shrink-0"
+                :class="isDeceased ? 'ring-gray-100 dark:ring-slate-800' : isMale ? 'ring-blue-50 dark:ring-slate-900' : 'ring-pink-50 dark:ring-slate-900'"
+            >
+              <img v-if="person.photo_url" :src="person.photo_url" :alt="person.name" class="w-full h-full object-cover"/>
+              <div v-else class="w-full h-full flex items-center justify-center text-3xl font-bold"
+                   :class="isDeceased
                 ? 'bg-gray-100 dark:bg-slate-700 text-gray-400 dark:text-slate-500'
                 : isMale
                   ? 'bg-blue-50 dark:bg-blue-900/40 text-blue-500 dark:text-blue-300'
                   : 'bg-pink-50 dark:bg-pink-900/40 text-pink-500 dark:text-pink-300'"
-            >{{ initials }}
+              >{{ initials }}
+              </div>
             </div>
-          </div>
 
-          <!-- Age pill (top right of content area) -->
-          <div v-if="age !== null" class="mb-2"
-               :class="isDeceased
+            <!-- Age pill (top right of content area) -->
+            <div v-if="age !== null" class="mb-2"
+                 :class="isDeceased
               ? 'text-gray-500 dark:text-slate-400'
               : isMale ? 'text-blue-600 dark:text-blue-400' : 'text-pink-600 dark:text-pink-400'"
-          >
-            <div class="flex flex-col items-end">
-              <span class="text-3xl font-black leading-none">{{ age }}</span>
-              <span class="text-xs font-semibold opacity-70 leading-none mt-0.5">{{
-                  isDeceased ? $t('person.ageAtDeath') : $t('person.currentAge')
-                }}</span>
+            >
+              <div class="flex flex-col items-end">
+                <span class="text-3xl font-black leading-none">{{ age }}</span>
+                <span class="text-xs font-semibold opacity-70 leading-none mt-0.5">{{
+                    isDeceased ? $t('person.ageAtDeath') : $t('person.currentAge')
+                  }}</span>
+              </div>
             </div>
           </div>
-        </div>
-
-        <!-- Scrollable content -->
-        <div class="px-6 pb-6 max-h-[55vh] overflow-y-auto space-y-4">
 
           <!-- Name -->
           <div>
