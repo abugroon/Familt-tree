@@ -1,21 +1,18 @@
 <template>
   <div
-      style="width: 150px"
     class="person-card group relative cursor-pointer select-none"
-    :class="isDeceased ? 'opacity-70' : ''"
     @mousedown.stop
     @click="$emit('click', person)"
   >
     <!-- Hover shadow glow -->
     <div
       class="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10 blur-xl scale-95"
-      :class="isDeceased ? 'bg-gray-300' : isMale ? 'bg-blue-200' : 'bg-pink-200'"
-    ></div>
+      :class="isDeceased ? 'bg-gray-300' : isMale ? 'bg-blue-200' : 'bg-pink-200'"></div>
 
     <!-- Card -->
     <div
       class="relative rounded-2xl border p-4 flex flex-col items-center gap-2.5 w-44 bg-white dark:bg-slate-800/80 shadow-sm group-hover:shadow-lg transition-shadow duration-300"
-      style="width: 225px"
+      style="width: 165px"
       :class="isDeceased
         ? 'border-gray-200 dark:border-slate-600/50'
         : isMale
@@ -60,7 +57,6 @@
             class="font-semibold leading-tight line-clamp-1"
             :class="isDeceased ? 'text-gray-500 dark:text-slate-500' : 'text-gray-800 dark:text-white'"
           >{{ person.name }}</span>
-<!--          <span class="text-sm flex-shrink-0">{{ person.gender === 'male' ? '👨' : '👩' }}</span>-->
         </div>
 
         <!-- Age -->

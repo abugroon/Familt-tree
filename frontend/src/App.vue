@@ -80,6 +80,17 @@
               {{ locale === 'ar' ? 'EN' : 'ع' }}
             </button>
 
+            <!-- Check Relationship -->
+            <button
+                @click="showRelationshipChecker = true"
+                class="w-9 h-9 rounded-xl flex items-center justify-center border transition-all active:scale-95 bg-gray-100 dark:bg-slate-800 border-gray-200 dark:border-slate-700 text-gray-500 dark:text-slate-400 hover:text-gray-800 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-slate-700"
+                :title="$t('relationship.title')">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+              </svg>
+            </button>
+
             <!-- Export -->
             <button
                 @click="familyTreeRef?.exportImage()"
@@ -332,6 +343,13 @@
         @close="selectedPerson = null"
         @edit="onEditPerson"
         @deleted="onPersonDeleted"
+        @marriage-changed="onMarriageChanged"
+    />
+
+    <RelationshipChecker
+        v-if="showRelationshipChecker"
+        :people="store.allPeople"
+        @close="showRelationshipChecker = false"
     />
 
     <ChangePasswordModal
@@ -355,6 +373,7 @@ import FamilyTree from '@/components/FamilyTree.vue'
 import AddPersonModal from '@/components/AddPersonModal.vue'
 import PersonDetailsModal from '@/components/PersonDetailsModal.vue'
 import ChangePasswordModal from '@/components/ChangePasswordModal.vue'
+import RelationshipChecker from '@/components/RelationshipChecker.vue'
 
 const router    = useRouter()
 const store     = usePeopleStore()
@@ -366,9 +385,10 @@ const { locale } = useI18n()
 
 const { focusNode } = useFocusNode()
 
-const familyTreeRef     = ref(null)
-const selectedPerson    = ref(null)
-const showChangePassword = ref(false)
+const familyTreeRef          = ref(null)
+const selectedPerson         = ref(null)
+const showChangePassword     = ref(false)
+const showRelationshipChecker = ref(false)
 const userDropdownOpen  = ref(false)
 const userDropdownRef   = ref(null)
 const copied            = ref(false)
@@ -480,6 +500,30 @@ function onEditPerson(person) {
 
 async function onPersonDeleted() {
   selectedPerson.value = null
+}
+
+async function onMarriageChanged(personId) {
+  await Promise.all([store.fetchTrees(), store.fetchAllPeople()])
+  // Re-find the person in the updated tree so the modal shows fresh data
+  const found = findPersonInTrees(store.trees, personId)
+  selectedPerson.value = found ?? null
+}
+
+function findPersonInTrees(trees, id) {
+  for (const tree of trees) {
+    const found = findInTree(tree, id)
+    if (found) return found
+  }
+  return null
+}
+
+function findInTree(node, id) {
+  if (node.id === id) return node
+  for (const child of (node.children ?? [])) {
+    const found = findInTree(child, id)
+    if (found) return found
+  }
+  return null
 }
 </script>
 

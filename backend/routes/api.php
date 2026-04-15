@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\MarriageController;
 use App\Http\Controllers\PersonController;
+use App\Http\Controllers\RelationshipController;
 use Illuminate\Support\Facades\Route;
 
 // Public auth routes
@@ -21,4 +23,12 @@ Route::get('/share/{token}/tree', [PersonController::class, 'publicTree']);
     Route::get('/tree',      [PersonController::class, 'roots']);
     Route::get('/tree/{id}', [PersonController::class, 'tree']);
     Route::apiResource('people', PersonController::class);
+
+    // Marriage routes
+    Route::post('/marriages',              [MarriageController::class, 'store']);
+    Route::get('/marriages/{personId}',    [MarriageController::class, 'getByPerson']);
+    Route::delete('/marriages/{id}',       [MarriageController::class, 'destroy']);
+
+    // Relationship detection
+    Route::post('/relationships/check',    [RelationshipController::class, 'check']);
 //});
