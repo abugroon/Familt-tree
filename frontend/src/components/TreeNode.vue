@@ -1,15 +1,12 @@
 <template>
   <div class="tree-node flex flex-col items-center">
 
-    <!-- ── Couple row: main person + optional spouse ───────────────────── -->
-    <div class="flex items-center">
+    <!-- ── Couple row ──────────────────────────────────────────────────── -->
+    <div class="relative flex items-center" ref="coupleRowRef">
 
-      <!-- Main person card wrapper — data-person-id used for SVG line math -->
+      <!-- Main person card — data-person-id used by FamilyTree SVG math -->
       <div ref="cardRef" :data-person-id="node.id" class="relative">
-        <PersonCard
-          :person="node"
-          @click="$emit('person-click', node)"
-        />
+        <PersonCard :person="node" @click="$emit('person-click', node)" />
 
         <!-- Expand / collapse toggle -->
         <button
@@ -28,37 +25,91 @@
         </button>
       </div>
 
-      <!-- Marriage connector + spouse card ───────────────────────────── -->
+      <!-- ── Spouse section ────────────────────────────────────────────── -->
       <template v-if="node.spouse">
 
-        <!-- Dashed connector with 💍 badge -->
-        <div class="relative flex-shrink-0 flex items-center" style="width: 56px;">
+        <!-- Invisible flex spacer — keeps spouse at default position in flow -->
+        <div :style="{ width: DEFAULT_GAP + 'px', flexShrink: 0 }"></div>
+
+        <!-- Spouse card wrapper — draggable via CSS transform -->
+        <div
+          class="relative flex-shrink-0"
+          :style="{
+            transform: `translate(${spouseOffset.x}px, ${spouseOffset.y}px)`,
+            zIndex: 5,
+            cursor: spouseDragging ? 'grabbing' : 'default',
+          }"
+        >
+          <!-- Drag handle (styled like root-node handles in FamilyTree) -->
           <div
-            class="w-full border-t-2 border-dashed border-amber-400 dark:border-amber-500"
-          ></div>
-          <!-- Ring badge centered on the line -->
-          <div class="absolute left-1/2 -translate-x-1/2 flex flex-col items-center -translate-y-1/2" style="top: 0;">
-            <div class="bg-white dark:bg-slate-900 px-1 flex flex-col items-center leading-none">
-              <span style="font-size:14px; line-height:1;">💍</span>
-              <span
-                v-if="node.spouse.marriage_date"
-                class="text-[10px] font-semibold text-amber-500 dark:text-amber-400 whitespace-nowrap mt-0.5"
-              >{{ marriageYear }}</span>
-            </div>
+            class="absolute -top-7 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1 rounded-full select-none
+              bg-white dark:bg-slate-800 border border-amber-200 dark:border-amber-700/60 shadow-sm
+              text-amber-400 dark:text-amber-500 hover:text-amber-600 dark:hover:text-amber-300
+              hover:border-amber-400 dark:hover:border-amber-500 transition-colors"
+            :class="spouseDragging ? 'cursor-grabbing' : 'cursor-grab'"
+            @mousedown.stop="startSpouseDrag"
+            @touchstart.stop.passive="startSpouseTouchDrag"
+          >
+            <!-- Grip dots icon -->
+            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M7 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7 9a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-6 7a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/>
+            </svg>
+            <span class="text-xs font-medium">{{ spouseDisplay?.name.split(' ')[0] }}</span>
+          </div>
+
+          <!-- Spouse PersonCard — click opens details -->
+          <div
+            @mousedown.stop
+            @click.stop="$emit('person-click', spouseDisplay)"
+            class="cursor-pointer"
+          >
+            <PersonCard :person="spouseDisplay" />
           </div>
         </div>
 
-        <!-- Spouse card (read-only, click opens their details) -->
-        <div
-          @mousedown.stop
-          @click.stop="$emit('person-click', spouseDisplay)"
-          class="cursor-pointer"
+        <!-- ── SVG dynamic connector line ──────────────────────────────── -->
+        <!--
+          Draws from person card right-center → spouse card left-center.
+          Uses overflow:visible so it works at any drag offset.
+        -->
+        <svg
+          class="absolute top-0 left-0 pointer-events-none overflow-visible"
+          style="width: 1px; height: 1px; z-index: 4;"
         >
-          <PersonCard :person="spouseDisplay" />
-        </div>
+          <!-- Dashed amber line -->
+          <line
+            :x1="CARD_W"
+            :y1="halfH"
+            :x2="CARD_W + DEFAULT_GAP + spouseOffset.x"
+            :y2="halfH + spouseOffset.y"
+            stroke="#f59e0b"
+            stroke-width="2"
+            stroke-dasharray="6 3"
+            stroke-linecap="round"
+            opacity="0.9"
+          />
+          <!-- 💍 emoji centered on the midpoint -->
+          <text
+            :x="CARD_W + (DEFAULT_GAP + spouseOffset.x) / 2"
+            :y="halfH + spouseOffset.y / 2 - 8"
+            text-anchor="middle"
+            dominant-baseline="middle"
+            style="font-size: 13px; user-select: none;"
+          >💍</text>
+          <!-- Marriage year just below the ring -->
+          <text
+            v-if="marriageYear"
+            :x="CARD_W + (DEFAULT_GAP + spouseOffset.x) / 2"
+            :y="halfH + spouseOffset.y / 2 + 9"
+            text-anchor="middle"
+            dominant-baseline="middle"
+            fill="#f59e0b"
+            style="font-size: 10px; font-weight: 700; user-select: none;"
+          >{{ marriageYear }}</text>
+        </svg>
 
       </template>
-    </div>
+    </div><!-- end couple row -->
 
     <!-- ── Add child button ────────────────────────────────────────────── -->
     <button
@@ -72,7 +123,7 @@
       إضافة ابن
     </button>
 
-    <!-- Add child modal — mounted directly here -->
+    <!-- Add child modal -->
     <AddChildModal
       v-if="showChildModal"
       :parent-id="node.id"
@@ -102,7 +153,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import PersonCard from './PersonCard.vue'
 import AddChildModal from './AddChildModal.vue'
 import { useFocusNode } from '@/composables/useFocusNode'
@@ -114,6 +165,22 @@ const props = defineProps({
 
 defineEmits(['person-click', 'collapse-toggle'])
 
+// ── Layout constants ───────────────────────────────────────────────────────
+const CARD_W     = 165   // PersonCard fixed width (px)
+const DEFAULT_GAP = 56   // default horizontal gap between person and spouse
+
+// ── Couple row height (for SVG midpoint) ──────────────────────────────────
+const coupleRowRef = ref(null)
+const coupleRowHeight = ref(160)
+
+onMounted(() => {
+  nextTick(() => {
+    coupleRowHeight.value = coupleRowRef.value?.offsetHeight ?? 160
+  })
+})
+
+const halfH = computed(() => coupleRowHeight.value / 2)
+
 // ── Spouse display ─────────────────────────────────────────────────────────
 const spouseDisplay = computed(() => {
   if (!props.node.spouse) return null
@@ -123,6 +190,97 @@ const spouseDisplay = computed(() => {
 const marriageYear = computed(() => {
   const d = props.node.spouse?.marriage_date
   return d ? new Date(d).getFullYear() : null
+})
+
+// ── Spouse drag ────────────────────────────────────────────────────────────
+const SPOUSE_POS_KEY = 'familytree_spouse_positions'
+
+function loadSpouseOffset(personId) {
+  try {
+    const all = JSON.parse(localStorage.getItem(SPOUSE_POS_KEY) || '{}')
+    return all[personId] ?? { x: 0, y: 0 }
+  } catch {
+    return { x: 0, y: 0 }
+  }
+}
+
+function saveSpouseOffset(personId, offset) {
+  try {
+    const all = JSON.parse(localStorage.getItem(SPOUSE_POS_KEY) || '{}')
+    all[personId] = offset
+    localStorage.setItem(SPOUSE_POS_KEY, JSON.stringify(all))
+  } catch {}
+}
+
+const spouseOffset   = ref(loadSpouseOffset(props.node.id))
+const spouseDragging = ref(false)
+let   spouseDragOrigin = null   // { mouseX, mouseY, origX, origY }
+
+function startSpouseDrag(e) {
+  spouseDragging.value = true
+  spouseDragOrigin = {
+    mouseX: e.clientX,
+    mouseY: e.clientY,
+    origX:  spouseOffset.value.x,
+    origY:  spouseOffset.value.y,
+  }
+  document.addEventListener('mousemove', onSpouseMouseMove)
+  document.addEventListener('mouseup',   onSpouseMouseUp)
+}
+
+function startSpouseTouchDrag(e) {
+  if (!e.touches.length) return
+  spouseDragging.value = true
+  spouseDragOrigin = {
+    mouseX: e.touches[0].clientX,
+    mouseY: e.touches[0].clientY,
+    origX:  spouseOffset.value.x,
+    origY:  spouseOffset.value.y,
+  }
+  document.addEventListener('touchmove', onSpouseTouchMove, { passive: false })
+  document.addEventListener('touchend',  onSpouseTouchEnd)
+}
+
+function onSpouseMouseMove(e) {
+  if (!spouseDragging.value || !spouseDragOrigin) return
+  spouseOffset.value = {
+    x: spouseDragOrigin.origX + (e.clientX - spouseDragOrigin.mouseX),
+    y: spouseDragOrigin.origY + (e.clientY - spouseDragOrigin.mouseY),
+  }
+}
+
+function onSpouseTouchMove(e) {
+  e.preventDefault()
+  if (!spouseDragging.value || !spouseDragOrigin || !e.touches.length) return
+  spouseOffset.value = {
+    x: spouseDragOrigin.origX + (e.touches[0].clientX - spouseDragOrigin.mouseX),
+    y: spouseDragOrigin.origY + (e.touches[0].clientY - spouseDragOrigin.mouseY),
+  }
+}
+
+function onSpouseMouseUp() {
+  if (!spouseDragging.value) return
+  spouseDragging.value = false
+  saveSpouseOffset(props.node.id, spouseOffset.value)
+  spouseDragOrigin = null
+  document.removeEventListener('mousemove', onSpouseMouseMove)
+  document.removeEventListener('mouseup',   onSpouseMouseUp)
+}
+
+function onSpouseTouchEnd() {
+  if (!spouseDragging.value) return
+  spouseDragging.value = false
+  saveSpouseOffset(props.node.id, spouseOffset.value)
+  spouseDragOrigin = null
+  document.removeEventListener('touchmove', onSpouseTouchMove)
+  document.removeEventListener('touchend',  onSpouseTouchEnd)
+}
+
+onUnmounted(() => {
+  document.removeEventListener('mousemove', onSpouseMouseMove)
+  document.removeEventListener('mouseup',   onSpouseMouseUp)
+  document.removeEventListener('touchmove', onSpouseTouchMove)
+  document.removeEventListener('touchend',  onSpouseTouchEnd)
 })
 
 // ── Children gap ───────────────────────────────────────────────────────────
@@ -142,8 +300,8 @@ function onChildSaved() {
 }
 
 // ── Collapse / expand ──────────────────────────────────────────────────────
-const cardRef    = ref(null)
-const STORAGE_KEY = 'familytree_collapsed_nodes'
+const cardRef      = ref(null)
+const STORAGE_KEY  = 'familytree_collapsed_nodes'
 
 function loadCollapsed() {
   try { return new Set(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')) }
