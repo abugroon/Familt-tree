@@ -24,11 +24,33 @@
       </button>
     </div>
 
+    <!-- Add child button -->
+    <button
+      type="button"
+      class="person-card mt-2 flex items-center gap-1 px-3 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-white dark:bg-slate-800 border border-emerald-300 dark:border-emerald-700 rounded-full shadow-sm hover:bg-emerald-50 dark:hover:bg-emerald-900/30 active:scale-95 transition-all"
+      @click="showChildModal = true"
+    >
+      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+      </svg>
+      إضافة ابن
+    </button>
+
+    <!-- Add child modal — mounted directly here, no chain needed -->
+    <AddChildModal
+      v-if="showChildModal"
+      :parent-id="node.id"
+      :parent-name="node.name"
+      @close="showChildModal = false"
+      @saved="onChildSaved"
+    />
+
     <!-- Children -->
     <Transition name="tree-expand">
       <div
         v-if="!collapsed && node.children && node.children.length"
-        class="flex items-start gap-8 mt-12 pt-4"
+        class="flex items-start mt-6 pt-2"
+        :style="{ gap: childrenGap }"
       >
         <TreeNode
           v-for="child in node.children"
@@ -37,28 +59,61 @@
           :depth="depth + 1"
           @person-click="$emit('person-click', $event)"
           @collapse-toggle="$emit('collapse-toggle')"
-        />
+          />
       </div>
     </Transition>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import PersonCard from './PersonCard.vue'
+import AddChildModal from './AddChildModal.vue'
+import { useFocusNode } from '@/composables/useFocusNode'
+
+const showChildModal = ref(false)
+const { focusNode } = useFocusNode()
+
+function onChildSaved() {
+  showChildModal.value = false
+  focusNode(props.node.id)
+}
 
 const props = defineProps({
   node: { type: Object, required: true },
   depth: { type: Number, default: 0 },
 })
 
+// Gap grows with number of children: 28px base + 22px per extra child
+const childrenGap = computed(() => {
+  const count = props.node.children?.length ?? 0
+  const px = 28 + Math.max(0, count - 1) * 22
+  return `${px}px`
+})
+
 defineEmits(['person-click', 'collapse-toggle'])
 
 const cardRef = ref(null)
-const collapsed = ref(false)
+
+const STORAGE_KEY = 'familytree_collapsed_nodes'
+
+function loadCollapsed() {
+  try { return new Set(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')) }
+  catch { return new Set() }
+}
+
+function saveCollapsed(set) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify([...set]))
+}
+
+const collapsed = ref(loadCollapsed().has(props.node.id))
 
 function toggleCollapse() {
   collapsed.value = !collapsed.value
+  const set = loadCollapsed()
+  if (collapsed.value) set.add(props.node.id)
+  else set.delete(props.node.id)
+  saveCollapsed(set)
 }
 </script>
 

@@ -91,6 +91,8 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted, nextTick, watch } from 'vue'
+import { toPng } from 'html-to-image'
+import { useFocusNode } from '@/composables/useFocusNode'
 import TreeNode from './TreeNode.vue'
 import FamilyNavigator from './FamilyNavigator.vue'
 
@@ -302,5 +304,67 @@ onMounted(() => {
   const mo = new MutationObserver(scheduleLineUpdate)
   if (canvasRef.value) mo.observe(canvasRef.value, { childList: true, subtree: true, attributes: true })
 })
+
+// ── Focus / pan to node ───────────────────────────────────────────────────
+const { pendingFocusId, clearFocus } = useFocusNode()
+
+watch(pendingFocusId, (id) => {
+  if (id === null) return
+  // Wait for tree to re-render after data fetch, then pan
+  setTimeout(() => {
+    const el = canvasRef.value?.querySelector(`[data-person-id="${id}"]`)
+    if (!el || !containerRef.value) { clearFocus(); return }
+    const containerRect = containerRef.value.getBoundingClientRect()
+    const canvasRect    = canvasRef.value.getBoundingClientRect()
+    const elRect        = el.getBoundingClientRect()
+    const elCX = (elRect.left - canvasRect.left + elRect.width  / 2) / scale.value
+    const elCY = (elRect.top  - canvasRect.top  + elRect.height / 2) / scale.value
+    panX.value = containerRect.width  / 2 - elCX * scale.value
+    panY.value = containerRect.height / 2 - elCY * scale.value
+    clearFocus()
+    scheduleLineUpdate()
+  }, 400)
+})
+
+// ── Export Image ──────────────────────────────────────────────────────────
+const exporting = ref(false)
+
+async function exportImage() {
+  if (!canvasRef.value || exporting.value) return
+  exporting.value = true
+  try {
+    // Temporarily reset transform so the full tree is captured
+    const prevScale = scale.value
+    const prevPanX  = panX.value
+    const prevPanY  = panY.value
+    scale.value = 1
+    panX.value  = 20
+    panY.value  = 20
+    await nextTick()
+
+    const isDark = document.documentElement.classList.contains('dark')
+    const dataUrl = await toPng(canvasRef.value, {
+      backgroundColor: isDark ? '#020617' : '#f8fafc',
+      pixelRatio: 2,
+      cacheBust: true,
+    })
+
+    // Restore transform
+    scale.value = prevScale
+    panX.value  = prevPanX
+    panY.value  = prevPanY
+
+    const link = document.createElement('a')
+    link.download = 'family-tree.png'
+    link.href = dataUrl
+    link.click()
+  } catch (e) {
+    console.error('Export failed:', e)
+  } finally {
+    exporting.value = false
+  }
+}
+
+defineExpose({ exportImage, exporting })
 </script>
 

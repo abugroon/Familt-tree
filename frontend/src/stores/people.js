@@ -10,6 +10,20 @@ export const usePeopleStore = defineStore('people', () => {
   const loading = ref(false)
   const error = ref(null)
 
+  // Add-child modal state
+  const showAddModal    = ref(false)
+  const addChildParentId = ref(null)
+
+  function openAddModal(parentId = null) {
+    console.log('openAddModal123',parentId)
+    addChildParentId.value = parentId
+    showAddModal.value = true
+  }
+  function closeAddModal() {
+    showAddModal.value = false
+    addChildParentId.value = null
+  }
+
   async function fetchTrees() {
     loading.value = true
     error.value = null
@@ -63,6 +77,10 @@ export const usePeopleStore = defineStore('people', () => {
     allPeople,
     loading,
     error,
+    showAddModal,
+    addChildParentId,
+    openAddModal,
+    closeAddModal,
     fetchTrees,
     fetchAllPeople,
     addPerson,

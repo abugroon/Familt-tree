@@ -235,6 +235,7 @@ import { usePeopleStore } from '@/stores/people'
 const props = defineProps({
   people: { type: Array, default: () => [] },
   editPerson: { type: Object, default: null },
+  defaultParentId: { type: [Number, String], default: null },
 })
 
 const emit = defineEmits(['close', 'saved'])
@@ -345,7 +346,7 @@ const form = ref({
   gender: '',
   birth_date: '',
   death_date: '',
-  parent_id: '',
+  parent_id: props.defaultParentId || '',
 })
 
 watch(() => props.editPerson, (val) => {

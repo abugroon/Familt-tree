@@ -108,6 +108,7 @@
       >
         {{ person.children.length }}
       </div>
+
     </div>
   </div>
 </template>
