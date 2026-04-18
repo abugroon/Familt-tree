@@ -68,39 +68,32 @@
         </div>
 
         <!-- ── SVG dynamic connector line ──────────────────────────────── -->
-        <!--
-          Draws from person card right-center → spouse card left-center.
-          Uses overflow:visible so it works at any drag offset.
-        -->
         <svg
           class="absolute top-0 left-0 pointer-events-none overflow-visible"
           style="width: 1px; height: 1px; z-index: 4;"
         >
-          <!-- Dashed amber line -->
-          <line
-            :x1="CARD_W"
-            :y1="halfH"
-            :x2="CARD_W + DEFAULT_GAP + spouseOffset.x"
-            :y2="halfH + spouseOffset.y"
+          <!-- Bezier curve — adapts cleanly to any spouse drag offset -->
+          <path
+            :d="spousePath"
+            fill="none"
             stroke="#f59e0b"
             stroke-width="2"
             stroke-dasharray="6 3"
             stroke-linecap="round"
-            opacity="0.9"
+            opacity="0.85"
           />
-          <!-- 💍 emoji centered on the midpoint -->
+          <!-- 💍 at curve midpoint -->
           <text
-            :x="CARD_W + (DEFAULT_GAP + spouseOffset.x) / 2"
-            :y="halfH + spouseOffset.y / 2 - 8"
+            :x="spouseMidX"
+            :y="spouseMidY - 9"
             text-anchor="middle"
             dominant-baseline="middle"
             style="font-size: 13px; user-select: none;"
           >💍</text>
-          <!-- Marriage year just below the ring -->
           <text
             v-if="marriageYear"
-            :x="CARD_W + (DEFAULT_GAP + spouseOffset.x) / 2"
-            :y="halfH + spouseOffset.y / 2 + 9"
+            :x="spouseMidX"
+            :y="spouseMidY + 8"
             text-anchor="middle"
             dominant-baseline="middle"
             fill="#f59e0b"
@@ -180,6 +173,23 @@ onMounted(() => {
 })
 
 const halfH = computed(() => coupleRowHeight.value / 2)
+
+// ── Spouse connector bezier path ───────────────────────────────────────────
+// Overshoot 10px into each card so the line visually originates from the card.
+// The SVG (z:4) is above the main card (no z-index) so the line is visible there.
+// The spouse wrapper (z:5) is above the SVG so it hides the line's far end.
+const OVERSHOOT = 10
+const spousePath = computed(() => {
+  const x1 = CARD_W - OVERSHOOT
+  const y1 = halfH.value
+  const x2 = CARD_W + DEFAULT_GAP + spouseOffset.value.x + OVERSHOOT
+  const y2 = halfH.value + spouseOffset.value.y
+  const mx  = (x1 + x2) / 2
+  return `M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`
+})
+// Midpoint stays in the spacer gap (OVERSHOOT cancels in the average)
+const spouseMidX = computed(() => CARD_W + (DEFAULT_GAP + spouseOffset.value.x) / 2)
+const spouseMidY = computed(() => halfH.value + spouseOffset.value.y / 2)
 
 // ── Spouse display ─────────────────────────────────────────────────────────
 const spouseDisplay = computed(() => {

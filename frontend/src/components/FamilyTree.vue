@@ -188,7 +188,6 @@ watch(() => props.trees, (trees) => {
     initialCentered.value = true
     const isMobile = window.innerWidth < 768
     scale.value = isMobile ? 0.55 : 0.85
-    scale.value = 0.55
     nextTick(() => {
       setTimeout(() => {
         const rootId = trees[0].id
