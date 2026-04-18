@@ -433,27 +433,71 @@ const exporting = ref(false)
 async function exportImage() {
   if (!canvasRef.value || exporting.value) return
   exporting.value = true
+
+  const prevScale = scale.value
+  const prevPanX  = panX.value
+  const prevPanY  = panY.value
+  const el        = canvasRef.value
+
+  let wrappers   = []
+  let origStyles = []
+
   try {
-    // Temporarily reset transform so the full tree is captured
-    const prevScale = scale.value
-    const prevPanX  = panX.value
-    const prevPanY  = panY.value
     scale.value = 1
-    panX.value  = 20
-    panY.value  = 20
+    panX.value  = 0
+    panY.value  = 0
     await nextTick()
 
-    const isDark = document.documentElement.classList.contains('dark')
-    const dataUrl = await toPng(canvasRef.value, {
-      backgroundColor: isDark ? '#020617' : '#f8fafc',
-      pixelRatio: 2,
-      cacheBust: true,
+    // Remove transform after nextTick — Vue won't re-apply until next reactive change
+    el.style.transform  = 'none'
+    el.style.willChange = 'auto'
+
+    // Force a large canvas size so tree wrappers (flex children) can measure their
+    // real offsetWidth. Without this, the canvas has 0 intrinsic width (all children
+    // are position:absolute), and shrink-to-fit wrappers may report wrong sizes.
+    el.style.width  = '30000px'
+    el.style.height = '30000px'
+
+    wrappers = [...el.querySelectorAll(':scope > div')]
+    if (!wrappers.length) throw new Error('nothing to export')
+
+    // Read CSS left/top directly — more reliable than offsetLeft when canvas has
+    // no natural width. offsetWidth is accurate now that canvas is explicitly sized.
+    const layout = wrappers.map(w => ({
+      x:  parseFloat(w.style.left) || 0,
+      y:  parseFloat(w.style.top)  || 0,
+      w:  w.offsetWidth,
+      h:  w.offsetHeight,
+      sl: w.style.left,
+      st: w.style.top,
+    }))
+    origStyles = layout.map(l => ({ left: l.sl, top: l.st }))
+
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+    layout.forEach(l => {
+      minX = Math.min(minX, l.x);       minY = Math.min(minY, l.y)
+      maxX = Math.max(maxX, l.x + l.w); maxY = Math.max(maxY, l.y + l.h)
     })
 
-    // Restore transform
-    scale.value = prevScale
-    panX.value  = prevPanX
-    panY.value  = prevPanY
+    const pad    = 48
+    const width  = Math.ceil(maxX - minX + pad * 2)
+    const height = Math.ceil(maxY - minY + pad * 2)
+
+    // Shift each wrapper so content starts at (pad, pad) in the exported image
+    layout.forEach((l, i) => {
+      wrappers[i].style.left = (l.x - minX + pad + 300) + 'px'
+      wrappers[i].style.top  = (l.y - minY + pad) + 'px'
+    })
+    el.style.width  = width  + 'px'
+    el.style.height = height + 'px'
+
+    const isDark  = document.documentElement.classList.contains('dark')
+    const dataUrl = await toPng(el, {
+      backgroundColor: isDark ? '#020617' : '#f8fafc',
+      width,
+      height,
+      pixelRatio: 2,
+    })
 
     const link = document.createElement('a')
     link.download = 'family-tree.png'
@@ -462,6 +506,16 @@ async function exportImage() {
   } catch (e) {
     console.error('Export failed:', e)
   } finally {
+    wrappers.forEach((w, i) => {
+      if (origStyles[i]) { w.style.left = origStyles[i].left; w.style.top = origStyles[i].top }
+    })
+    el.style.transform  = ''
+    el.style.willChange = ''
+    el.style.width      = ''
+    el.style.height     = ''
+    scale.value = prevScale
+    panX.value  = prevPanX
+    panY.value  = prevPanY
     exporting.value = false
   }
 }
