@@ -3,85 +3,101 @@
 
     <!-- Family Navigator -->
     <FamilyNavigator
-      :roots="trees"
-      :selected="selectedRootId"
-      @select="onSelectRoot"
+        :roots="trees"
+        :selected="selectedRootId"
+        @select="onSelectRoot"
     />
 
     <!-- Canvas -->
     <div
-      class="relative flex-1 overflow-hidden cursor-grab active:cursor-grabbing select-none"
-      ref="containerRef"
-      @mousedown.left="onCanvasMouseDown"
-      @mousemove="onMouseMove"
-      @mouseup="onMouseUp"
-      @mouseleave="onMouseUp"
-      @wheel.prevent="onWheel"
-      @touchstart.passive="startTouch"
-      @touchmove.prevent="onTouchMove"
-      @touchend="stopTouch"
+        class="relative flex-1 overflow-hidden cursor-grab active:cursor-grabbing select-none"
+        ref="containerRef"
+        @mousedown.left="onCanvasMouseDown"
+        @mousemove="onMouseMove"
+        @mouseup="onMouseUp"
+        @mouseleave="onMouseUp"
+        @wheel.prevent="onWheel"
+        @touchstart.passive="startTouch"
+        @touchmove.prevent="onTouchMove"
+        @touchend="stopTouch"
     >
       <!-- Dot grid background -->
       <div class="absolute inset-0 pointer-events-none" :style="gridStyle"></div>
 
       <!-- Zoom controls -->
       <div class="absolute bottom-6 end-6 flex flex-col gap-2 z-20">
-        <button @click="zoomIn"    class="w-9 h-9 rounded-xl bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 border border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-300 flex items-center justify-center shadow-md active:scale-95"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg></button>
-        <button @click="zoomOut"   class="w-9 h-9 rounded-xl bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 border border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-300 flex items-center justify-center shadow-md active:scale-95"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"   d="M20 12H4"/></svg></button>
-        <button @click="resetView" class="w-9 h-9 rounded-xl bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 border border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-300 flex items-center justify-center shadow-md active:scale-95 text-base">↺</button>
+        <button @click="zoomIn"
+                class="w-9 h-9 rounded-xl bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 border border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-300 flex items-center justify-center shadow-md active:scale-95">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+          </svg>
+        </button>
+        <button @click="zoomOut"
+                class="w-9 h-9 rounded-xl bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 border border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-300 flex items-center justify-center shadow-md active:scale-95">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
+          </svg>
+        </button>
+        <button @click="resetView"
+                class="w-9 h-9 rounded-xl bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 border border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-300 flex items-center justify-center shadow-md active:scale-95 text-base">
+          ↺
+        </button>
       </div>
 
       <!-- Scale indicator -->
       <div class="absolute bottom-6 end-20 z-20">
-        <div class="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-xs text-gray-500 dark:text-slate-400 font-mono shadow-sm">
+        <div
+            class="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-xs text-gray-500 dark:text-slate-400 font-mono shadow-sm">
           {{ Math.round(scale * 100) }}%
         </div>
       </div>
 
       <!-- Transformable canvas -->
       <div
-        ref="canvasRef"
-        class="absolute top-0 left-0"
-        :style="{ transform: `translate(${panX}px, ${panY}px) scale(${scale})`, transformOrigin: '0 0', willChange: 'transform' }"
+          ref="canvasRef"
+          class="absolute top-0 left-0"
+          :style="{ transform: `translate(${panX}px, ${panY}px) scale(${scale})`, transformOrigin: '0 0', willChange: 'transform' }"
       >
         <!-- SVG connector lines -->
         <svg
-          class="absolute top-0 left-0 pointer-events-none overflow-visible"
-          :width="svgSize.w" :height="svgSize.h"
-          :style="{ zIndex: 1 }"
+            class="absolute top-0 left-0 pointer-events-none overflow-visible"
+            :width="svgSize.w" :height="svgSize.h"
+            :style="{ zIndex: 1 }"
         >
           <g v-for="conn in connections" :key="conn.id">
-            <path :d="conn.path" fill="none" :stroke="conn.color" stroke-width="4" opacity="0.07" />
-            <path :d="conn.path" fill="none" :stroke="conn.color" stroke-width="2" opacity="0.55" stroke-linecap="round"/>
+            <path :d="conn.path" fill="none" :stroke="conn.color" stroke-width="4" opacity="0.07"/>
+            <path :d="conn.path" fill="none" :stroke="conn.color" stroke-width="2" opacity="0.55"
+                  stroke-linecap="round"/>
             <circle :cx="conn.cx" :cy="conn.cy" r="3.5" :fill="conn.color" opacity="0.7"/>
           </g>
         </svg>
 
         <!-- Root trees — absolutely positioned, individually draggable -->
         <div
-          v-for="tree in visibleTrees"
-          :key="`${selectedRootId ?? 'all'}-${tree.id}`"
-          class="absolute"
-          :style="{ left: pos(tree.id).x + 'px', top: pos(tree.id).y + 'px', zIndex: 2 }"
+            v-for="tree in visibleTrees"
+            :key="`${selectedRootId ?? 'all'}-${tree.id}`"
+            class="absolute"
+            :style="{ left: pos(tree.id).x + 'px', top: pos(tree.id).y + 'px', zIndex: 2 }"
         >
           <!-- Drag handle for root node -->
           <div
-            class="absolute -top-7 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1 rounded-full cursor-grab active:cursor-grabbing select-none
+              class="absolute -top-7 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1 rounded-full cursor-grab active:cursor-grabbing select-none
               bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 shadow-sm text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300"
-            @mousedown.stop="startRootDrag($event, tree.id)"
-            @touchstart.stop.passive="startRootTouchDrag($event, tree.id)"
+              @mousedown.stop="startRootDrag($event, tree.id)"
+              @touchstart.stop.passive="startRootTouchDrag($event, tree.id)"
           >
             <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M7 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7 9a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-6 7a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/>
+              <path
+                  d="M7 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7 9a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-6 7a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/>
             </svg>
             <span class="text-xs font-medium">{{ tree.name.split(' ')[0] }}</span>
           </div>
 
           <TreeNode
-            :node="tree"
-            :depth="0"
-            @person-click="$emit('person-click', $event)"
-            @collapse-toggle="scheduleLineUpdate"
+              :node="tree"
+              :depth="0"
+              @person-click="$emit('person-click', $event)"
+              @collapse-toggle="scheduleLineUpdate"
           />
         </div>
       </div>
@@ -90,24 +106,25 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, nextTick, watch } from 'vue'
-import { toPng } from 'html-to-image'
-import { useFocusNode } from '@/composables/useFocusNode'
+import {ref, reactive, computed, onMounted, nextTick, watch} from 'vue'
+import {toPng} from 'html-to-image'
+import {useFocusNode} from '@/composables/useFocusNode'
 import TreeNode from './TreeNode.vue'
 import FamilyNavigator from './FamilyNavigator.vue'
 
 const props = defineProps({
-  trees: { type: Array, default: () => [] }
+  trees: {type: Array, default: () => []}
 })
 defineEmits(['person-click'])
 
 // ── Navigator ─────────────────────────────────────────────────────────────
 const selectedRootId = ref(null)
 const visibleTrees = computed(() =>
-  selectedRootId.value === null
-    ? props.trees
-    : props.trees.filter(t => t.id === selectedRootId.value)
+    selectedRootId.value === null
+        ? props.trees
+        : props.trees.filter(t => t.id === selectedRootId.value)
 )
+
 function onSelectRoot(id) {
   selectedRootId.value = id
   scale.value = 0.85
@@ -125,44 +142,52 @@ function onSelectRoot(id) {
 
 // ── Refs ──────────────────────────────────────────────────────────────────
 const containerRef = ref(null)
-const canvasRef    = ref(null)
-const scale  = ref(0.85)
-const panX   = ref(80)
-const panY   = ref(60)
+const canvasRef = ref(null)
+const scale = ref(0.85)
+const panX = ref(80)
+const panY = ref(60)
 const connections = ref([])
-const svgSize = reactive({ w: 4000, h: 4000 })
+const svgSize = reactive({w: 4000, h: 4000})
 
 // ── Root node positions ───────────────────────────────────────────────────
 const STORAGE_KEY = 'familytree_root_positions'
 const rootPositions = ref(loadPositions())
 
 function loadPositions() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') }
-  catch { return {} }
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')
+  } catch {
+    return {}
+  }
 }
+
 function savePositions() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(rootPositions.value))
 }
+
 function pos(id) {
-  return rootPositions.value[id] || { x: 0, y: 0 }
+  return rootPositions.value[id] || {x: 0, y: 0}
 }
+
 function initMissingPositions(trees) {
   let changed = false
   trees.forEach((tree, i) => {
     if (!rootPositions.value[tree.id]) {
-      rootPositions.value[tree.id] = { x: i * 300, y: 60 }
+      rootPositions.value[tree.id] = {x: i * 300, y: 60}
       changed = true
     }
   })
   if (changed) savePositions()
 }
 
-const mobileCentered = ref(false)
+const initialCentered = ref(false)
 
 watch(() => props.trees, (trees) => {
   initMissingPositions(trees)
-  if (trees.length && window.innerWidth < 768 && !mobileCentered.value) {
-    mobileCentered.value = true
+  if (trees.length && !initialCentered.value) {
+    initialCentered.value = true
+    const isMobile = window.innerWidth < 768
+    scale.value = isMobile ? 0.55 : 0.85
     scale.value = 0.55
     nextTick(() => {
       setTimeout(() => {
@@ -170,46 +195,46 @@ watch(() => props.trees, (trees) => {
         const el = canvasRef.value?.querySelector(`[data-person-id="${rootId}"]`)
         if (!el || !containerRef.value) return
         const containerRect = containerRef.value.getBoundingClientRect()
-        const canvasRect    = canvasRef.value.getBoundingClientRect()
-        const elRect        = el.getBoundingClientRect()
-        const elCX = (elRect.left - canvasRect.left + elRect.width  / 2) / scale.value
-        const elCY = (elRect.top  - canvasRect.top  + elRect.height / 2) / scale.value
-        panX.value = containerRect.width  / 2 - elCX * scale.value
+        const canvasRect = canvasRef.value.getBoundingClientRect()
+        const elRect = el.getBoundingClientRect()
+        const elCX = (elRect.left - canvasRect.left + elRect.width / 2) / scale.value
+        const elCY = (elRect.top - canvasRect.top + elRect.height / 2) / scale.value
+        panX.value = containerRect.width / 2 - elCX * scale.value
         panY.value = containerRect.height / 4 - elCY * scale.value
         scheduleLineUpdate()
       }, 300)
     })
   }
   nextTick(scheduleLineUpdate)
-}, { immediate: true, deep: false })
+}, {immediate: true, deep: false})
 
 // ── Canvas drag ───────────────────────────────────────────────────────────
 const isDragging = ref(false)
-const dragStart  = ref({ x: 0, y: 0 })
-const panStart   = ref({ x: 0, y: 0 })
+const dragStart = ref({x: 0, y: 0})
+const panStart = ref({x: 0, y: 0})
 
 function onCanvasMouseDown(e) {
   if (e.target.closest('.person-card') || e.target.closest('button') || draggingRootId.value) return
   isDragging.value = true
-  dragStart.value  = { x: e.clientX, y: e.clientY }
-  panStart.value   = { x: panX.value, y: panY.value }
+  dragStart.value = {x: e.clientX, y: e.clientY}
+  panStart.value = {x: panX.value, y: panY.value}
 }
 
 // ── Root drag ─────────────────────────────────────────────────────────────
 const draggingRootId = ref(null)
-let rootDragOrigin   = null   // { mouseX, mouseY, origX, origY }
+let rootDragOrigin = null   // { mouseX, mouseY, origX, origY }
 
 function startRootDrag(e, rootId) {
   draggingRootId.value = rootId
   const p = pos(rootId)
-  rootDragOrigin = { mouseX: e.clientX, mouseY: e.clientY, origX: p.x, origY: p.y }
+  rootDragOrigin = {mouseX: e.clientX, mouseY: e.clientY, origX: p.x, origY: p.y}
 }
 
 function startRootTouchDrag(e, rootId) {
   if (!e.touches.length) return
   draggingRootId.value = rootId
   const p = pos(rootId)
-  rootDragOrigin = { mouseX: e.touches[0].clientX, mouseY: e.touches[0].clientY, origX: p.x, origY: p.y }
+  rootDragOrigin = {mouseX: e.touches[0].clientX, mouseY: e.touches[0].clientY, origX: p.x, origY: p.y}
 }
 
 function onMouseMove(e) {
@@ -245,6 +270,7 @@ function getTouchMidpoint(touches) {
     y: (touches[0].clientY + touches[1].clientY) / 2,
   }
 }
+
 function getTouchDist(touches) {
   const dx = touches[0].clientX - touches[1].clientX
   const dy = touches[0].clientY - touches[1].clientY
@@ -262,16 +288,16 @@ function startTouch(e) {
       panY: panY.value,
     }
   } else if (e.touches.length === 2) {
-    const mid  = getTouchMidpoint(e.touches)
+    const mid = getTouchMidpoint(e.touches)
     const dist = getTouchDist(e.touches)
     touchState.value = {
-      type:       'pinch',
-      startDist:  dist,
+      type: 'pinch',
+      startDist: dist,
       startScale: scale.value,
-      midX:       mid.x,
-      midY:       mid.y,
-      startPanX:  panX.value,
-      startPanY:  panY.value,
+      midX: mid.x,
+      midY: mid.y,
+      startPanX: panX.value,
+      startPanY: panY.value,
     }
   }
 }
@@ -291,12 +317,12 @@ function onTouchMove(e) {
   if (!touchState.value) return
 
   if (e.touches.length === 2 && touchState.value.type === 'pinch') {
-    const dist     = getTouchDist(e.touches)
-    const ratio    = dist / touchState.value.startDist
+    const dist = getTouchDist(e.touches)
+    const ratio = dist / touchState.value.startDist
     const newScale = Math.min(2, Math.max(0.2, touchState.value.startScale * ratio))
 
     // Zoom toward the pinch midpoint
-    const { midX, midY, startPanX, startPanY, startScale } = touchState.value
+    const {midX, midY, startPanX, startPanY, startScale} = touchState.value
     panX.value = midX - (midX - startPanX) * (newScale / startScale)
     panY.value = midY - (midY - startPanY) * (newScale / startScale)
     scale.value = newScale
@@ -308,7 +334,11 @@ function onTouchMove(e) {
 }
 
 function stopTouch(e) {
-  if (draggingRootId.value) { savePositions(); draggingRootId.value = null; rootDragOrigin = null }
+  if (draggingRootId.value) {
+    savePositions();
+    draggingRootId.value = null;
+    rootDragOrigin = null
+  }
   // If one finger lifted during pinch, switch back to pan mode
   if (e?.touches?.length === 1) {
     touchState.value = {
@@ -324,9 +354,18 @@ function stopTouch(e) {
 }
 
 // ── Zoom ──────────────────────────────────────────────────────────────────
-function onWheel(e) { scale.value = Math.min(2, Math.max(0.2, scale.value - e.deltaY * 0.001)) }
-function zoomIn()   { scale.value = Math.min(2,  +(scale.value + 0.1).toFixed(2)) }
-function zoomOut()  { scale.value = Math.max(0.2, +(scale.value - 0.1).toFixed(2)) }
+function onWheel(e) {
+  scale.value = Math.min(2, Math.max(0.2, scale.value - e.deltaY * 0.001))
+}
+
+function zoomIn() {
+  scale.value = Math.min(2, +(scale.value + 0.1).toFixed(2))
+}
+
+function zoomOut() {
+  scale.value = Math.max(0.2, +(scale.value - 0.1).toFixed(2))
+}
+
 function resetView() {
   if (window.innerWidth < 768 && visibleTrees.value.length) {
     scale.value = 0.55
@@ -335,30 +374,31 @@ function resetView() {
       const el = canvasRef.value?.querySelector(`[data-person-id="${rootId}"]`)
       if (!el || !containerRef.value) return
       const containerRect = containerRef.value.getBoundingClientRect()
-      const canvasRect    = canvasRef.value.getBoundingClientRect()
-      const elRect        = el.getBoundingClientRect()
-      const elCX = (elRect.left - canvasRect.left + elRect.width  / 2) / scale.value
-      const elCY = (elRect.top  - canvasRect.top  + elRect.height / 2) / scale.value
-      panX.value = containerRect.width  / 2 - elCX * scale.value
+      const canvasRect = canvasRef.value.getBoundingClientRect()
+      const elRect = el.getBoundingClientRect()
+      const elCX = (elRect.left - canvasRect.left + elRect.width / 2) / scale.value
+      const elCY = (elRect.top - canvasRect.top + elRect.height / 2) / scale.value
+      panX.value = containerRect.width / 2 - elCX * scale.value
       panY.value = containerRect.height / 4 - elCY * scale.value
       scheduleLineUpdate()
     })
   } else {
     scale.value = 0.85
-    panX.value  = 80
-    panY.value  = 60
+    panX.value = 80
+    panY.value = 60
   }
 }
 
 // ── Grid background ───────────────────────────────────────────────────────
 const gridStyle = computed(() => {
-  const dark  = document.documentElement.classList.contains('dark')
+  const dark = document.documentElement.classList.contains('dark')
   const color = dark ? '#334155' : '#cbd5e1'
-  return { backgroundImage: `radial-gradient(circle, ${color} 1px, transparent 1px)`, backgroundSize: '28px 28px' }
+  return {backgroundImage: `radial-gradient(circle, ${color} 1px, transparent 1px)`, backgroundSize: '28px 28px'}
 })
 
 // ── SVG Lines ─────────────────────────────────────────────────────────────
 let lineTimer = null
+
 function scheduleLineUpdate() {
   clearTimeout(lineTimer)
   lineTimer = setTimeout(drawLines, 120)
@@ -370,10 +410,18 @@ function drawLines() {
     if (!canvas) return
     const originX = canvas.getBoundingClientRect().left
     const originY = canvas.getBoundingClientRect().top
+
     function toCanvas(rect) {
-      return { x: (rect.left - originX) / scale.value, y: (rect.top - originY) / scale.value, w: rect.width / scale.value, h: rect.height / scale.value }
+      return {
+        x: (rect.left - originX) / scale.value,
+        y: (rect.top - originY) / scale.value,
+        w: rect.width / scale.value,
+        h: rect.height / scale.value
+      }
     }
+
     const newConns = []
+
     function processNode(node) {
       if (!node.children?.length) return
       const parentEl = canvas.querySelector(`[data-person-id="${node.id}"]`)
@@ -389,10 +437,17 @@ function drawLines() {
         const cx = cr.x + cr.w / 2
         const cy = cr.y
         const midY = py + (cy - py) * 0.5
-        newConns.push({ id: `${node.id}-${child.id}`, path: `M ${px} ${py} C ${px} ${midY}, ${cx} ${midY}, ${cx} ${cy}`, color, cx, cy })
+        newConns.push({
+          id: `${node.id}-${child.id}`,
+          path: `M ${px} ${py} C ${px} ${midY}, ${cx} ${midY}, ${cx} ${cy}`,
+          color,
+          cx,
+          cy
+        })
         processNode(child)
       }
     }
+
     for (const tree of visibleTrees.value) processNode(tree)
     connections.value = newConns
     svgSize.w = Math.max(canvas.scrollWidth / scale.value + 400, 3000)
@@ -403,24 +458,27 @@ function drawLines() {
 onMounted(() => {
   scheduleLineUpdate()
   const mo = new MutationObserver(scheduleLineUpdate)
-  if (canvasRef.value) mo.observe(canvasRef.value, { childList: true, subtree: true, attributes: true })
+  if (canvasRef.value) mo.observe(canvasRef.value, {childList: true, subtree: true, attributes: true})
 })
 
 // ── Focus / pan to node ───────────────────────────────────────────────────
-const { pendingFocusId, clearFocus } = useFocusNode()
+const {pendingFocusId, clearFocus} = useFocusNode()
 
 watch(pendingFocusId, (id) => {
   if (id === null) return
   // Wait for tree to re-render after data fetch, then pan
   setTimeout(() => {
     const el = canvasRef.value?.querySelector(`[data-person-id="${id}"]`)
-    if (!el || !containerRef.value) { clearFocus(); return }
+    if (!el || !containerRef.value) {
+      clearFocus();
+      return
+    }
     const containerRect = containerRef.value.getBoundingClientRect()
-    const canvasRect    = canvasRef.value.getBoundingClientRect()
-    const elRect        = el.getBoundingClientRect()
-    const elCX = (elRect.left - canvasRect.left + elRect.width  / 2) / scale.value
-    const elCY = (elRect.top  - canvasRect.top  + elRect.height / 2) / scale.value
-    panX.value = containerRect.width  / 2 - elCX * scale.value
+    const canvasRect = canvasRef.value.getBoundingClientRect()
+    const elRect = el.getBoundingClientRect()
+    const elCX = (elRect.left - canvasRect.left + elRect.width / 2) / scale.value
+    const elCY = (elRect.top - canvasRect.top + elRect.height / 2) / scale.value
+    panX.value = containerRect.width / 2 - elCX * scale.value
     panY.value = containerRect.height / 2 - elCY * scale.value
     clearFocus()
     scheduleLineUpdate()
@@ -435,27 +493,27 @@ async function exportImage() {
   exporting.value = true
 
   const prevScale = scale.value
-  const prevPanX  = panX.value
-  const prevPanY  = panY.value
-  const el        = canvasRef.value
+  const prevPanX = panX.value
+  const prevPanY = panY.value
+  const el = canvasRef.value
 
-  let wrappers   = []
+  let wrappers = []
   let origStyles = []
 
   try {
     scale.value = 1
-    panX.value  = 0
-    panY.value  = 0
+    panX.value = 0
+    panY.value = 0
     await nextTick()
 
     // Remove transform after nextTick — Vue won't re-apply until next reactive change
-    el.style.transform  = 'none'
+    el.style.transform = 'none'
     el.style.willChange = 'auto'
 
     // Force a large canvas size so tree wrappers (flex children) can measure their
     // real offsetWidth. Without this, the canvas has 0 intrinsic width (all children
     // are position:absolute), and shrink-to-fit wrappers may report wrong sizes.
-    el.style.width  = '30000px'
+    el.style.width = '30000px'
     el.style.height = '30000px'
 
     wrappers = [...el.querySelectorAll(':scope > div')]
@@ -464,34 +522,36 @@ async function exportImage() {
     // Read CSS left/top directly — more reliable than offsetLeft when canvas has
     // no natural width. offsetWidth is accurate now that canvas is explicitly sized.
     const layout = wrappers.map(w => ({
-      x:  parseFloat(w.style.left) || 0,
-      y:  parseFloat(w.style.top)  || 0,
-      w:  w.offsetWidth,
-      h:  w.offsetHeight,
+      x: parseFloat(w.style.left) || 0,
+      y: parseFloat(w.style.top) || 0,
+      w: w.offsetWidth,
+      h: w.offsetHeight,
       sl: w.style.left,
       st: w.style.top,
     }))
-    origStyles = layout.map(l => ({ left: l.sl, top: l.st }))
+    origStyles = layout.map(l => ({left: l.sl, top: l.st}))
 
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
     layout.forEach(l => {
-      minX = Math.min(minX, l.x);       minY = Math.min(minY, l.y)
-      maxX = Math.max(maxX, l.x + l.w); maxY = Math.max(maxY, l.y + l.h)
+      minX = Math.min(minX, l.x);
+      minY = Math.min(minY, l.y)
+      maxX = Math.max(maxX, l.x + l.w);
+      maxY = Math.max(maxY, l.y + l.h)
     })
 
-    const pad    = 48
-    const width  = Math.ceil(maxX - minX + pad * 2)
+    const pad = 48
+    const width = Math.ceil(maxX - minX + pad * 2)
     const height = Math.ceil(maxY - minY + pad * 2)
 
     // Shift each wrapper so content starts at (pad, pad) in the exported image
     layout.forEach((l, i) => {
       wrappers[i].style.left = (l.x - minX + pad + 300) + 'px'
-      wrappers[i].style.top  = (l.y - minY + pad) + 'px'
+      wrappers[i].style.top = (l.y - minY + pad) + 'px'
     })
-    el.style.width  = width  + 'px'
+    el.style.width = width + 'px'
     el.style.height = height + 'px'
 
-    const isDark  = document.documentElement.classList.contains('dark')
+    const isDark = document.documentElement.classList.contains('dark')
     const dataUrl = await toPng(el, {
       backgroundColor: isDark ? '#020617' : '#f8fafc',
       width,
@@ -507,19 +567,22 @@ async function exportImage() {
     console.error('Export failed:', e)
   } finally {
     wrappers.forEach((w, i) => {
-      if (origStyles[i]) { w.style.left = origStyles[i].left; w.style.top = origStyles[i].top }
+      if (origStyles[i]) {
+        w.style.left = origStyles[i].left;
+        w.style.top = origStyles[i].top
+      }
     })
-    el.style.transform  = ''
+    el.style.transform = ''
     el.style.willChange = ''
-    el.style.width      = ''
-    el.style.height     = ''
+    el.style.width = ''
+    el.style.height = ''
     scale.value = prevScale
-    panX.value  = prevPanX
-    panY.value  = prevPanY
+    panX.value = prevPanX
+    panY.value = prevPanY
     exporting.value = false
   }
 }
 
-defineExpose({ exportImage, exporting })
+defineExpose({exportImage, exporting})
 </script>
 
