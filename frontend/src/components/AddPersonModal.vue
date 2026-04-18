@@ -45,6 +45,7 @@
           <div>
             <label class="block text-xs font-medium text-gray-500 dark:text-slate-400 mb-1.5">{{ $t('person.name') }} *</label>
             <input
+              ref="nameInputRef"
               v-model="form.name"
               type="text"
               :placeholder="$t('person.namePlaceholder')"
@@ -241,8 +242,9 @@ const props = defineProps({
 const emit = defineEmits(['close', 'saved'])
 
 const store = usePeopleStore()
-const fileInputRef = ref(null)
-const photoPreview = ref(null)
+const nameInputRef  = ref(null)
+const fileInputRef  = ref(null)
+const photoPreview  = ref(null)
 const photoFile = ref(null)
 const saving = ref(false)
 const error = ref('')
@@ -334,7 +336,10 @@ function onOutsideClick(e) {
     parentOpen.value = false
   }
 }
-onMounted(() => document.addEventListener('mousedown', onOutsideClick))
+onMounted(() => {
+  document.addEventListener('mousedown', onOutsideClick)
+  setTimeout(() => nameInputRef.value?.focus(), 100)
+})
 onBeforeUnmount(() => document.removeEventListener('mousedown', onOutsideClick))
 
 // ── Form ──────────────────────────────────────────────────────────────────

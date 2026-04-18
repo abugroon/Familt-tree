@@ -286,7 +286,7 @@ onUnmounted(() => {
 // ── Children gap ───────────────────────────────────────────────────────────
 const childrenGap = computed(() => {
   const count = props.node.children?.length ?? 0
-  const px = 28 + Math.max(0, count - 1) * 22
+  const px = 6 + Math.max(0, count - 1) * 4
   return `${px}px`
 })
 

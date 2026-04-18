@@ -157,8 +157,29 @@ function initMissingPositions(trees) {
   if (changed) savePositions()
 }
 
+const mobileCentered = ref(false)
+
 watch(() => props.trees, (trees) => {
   initMissingPositions(trees)
+  if (trees.length && window.innerWidth < 768 && !mobileCentered.value) {
+    mobileCentered.value = true
+    scale.value = 0.55
+    nextTick(() => {
+      setTimeout(() => {
+        const rootId = trees[0].id
+        const el = canvasRef.value?.querySelector(`[data-person-id="${rootId}"]`)
+        if (!el || !containerRef.value) return
+        const containerRect = containerRef.value.getBoundingClientRect()
+        const canvasRect    = canvasRef.value.getBoundingClientRect()
+        const elRect        = el.getBoundingClientRect()
+        const elCX = (elRect.left - canvasRect.left + elRect.width  / 2) / scale.value
+        const elCY = (elRect.top  - canvasRect.top  + elRect.height / 2) / scale.value
+        panX.value = containerRect.width  / 2 - elCX * scale.value
+        panY.value = containerRect.height / 4 - elCY * scale.value
+        scheduleLineUpdate()
+      }, 300)
+    })
+  }
   nextTick(scheduleLineUpdate)
 }, { immediate: true, deep: false })
 
@@ -215,13 +236,46 @@ function onMouseUp() {
   isDragging.value = false
 }
 
-// ── Touch (canvas pan) ────────────────────────────────────────────────────
+// ── Touch (pan + pinch-to-zoom) ───────────────────────────────────────────
 const touchState = ref(null)
+
+function getTouchMidpoint(touches) {
+  return {
+    x: (touches[0].clientX + touches[1].clientX) / 2,
+    y: (touches[0].clientY + touches[1].clientY) / 2,
+  }
+}
+function getTouchDist(touches) {
+  const dx = touches[0].clientX - touches[1].clientX
+  const dy = touches[0].clientY - touches[1].clientY
+  return Math.sqrt(dx * dx + dy * dy)
+}
+
 function startTouch(e) {
   if (draggingRootId.value) return
-  if (e.touches.length === 1)
-    touchState.value = { x: e.touches[0].clientX, y: e.touches[0].clientY, panX: panX.value, panY: panY.value }
+  if (e.touches.length === 1) {
+    touchState.value = {
+      type: 'pan',
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY,
+      panX: panX.value,
+      panY: panY.value,
+    }
+  } else if (e.touches.length === 2) {
+    const mid  = getTouchMidpoint(e.touches)
+    const dist = getTouchDist(e.touches)
+    touchState.value = {
+      type:       'pinch',
+      startDist:  dist,
+      startScale: scale.value,
+      midX:       mid.x,
+      midY:       mid.y,
+      startPanX:  panX.value,
+      startPanY:  panY.value,
+    }
+  }
 }
+
 function onTouchMove(e) {
   if (draggingRootId.value && rootDragOrigin && e.touches.length) {
     const dx = (e.touches[0].clientX - rootDragOrigin.mouseX) / scale.value
@@ -233,21 +287,68 @@ function onTouchMove(e) {
     scheduleLineUpdate()
     return
   }
-  if (e.touches.length === 1 && touchState.value) {
+
+  if (!touchState.value) return
+
+  if (e.touches.length === 2 && touchState.value.type === 'pinch') {
+    const dist     = getTouchDist(e.touches)
+    const ratio    = dist / touchState.value.startDist
+    const newScale = Math.min(2, Math.max(0.2, touchState.value.startScale * ratio))
+
+    // Zoom toward the pinch midpoint
+    const { midX, midY, startPanX, startPanY, startScale } = touchState.value
+    panX.value = midX - (midX - startPanX) * (newScale / startScale)
+    panY.value = midY - (midY - startPanY) * (newScale / startScale)
+    scale.value = newScale
+    scheduleLineUpdate()
+  } else if (e.touches.length === 1 && touchState.value.type === 'pan') {
     panX.value = touchState.value.panX + (e.touches[0].clientX - touchState.value.x)
     panY.value = touchState.value.panY + (e.touches[0].clientY - touchState.value.y)
   }
 }
-function stopTouch() {
+
+function stopTouch(e) {
   if (draggingRootId.value) { savePositions(); draggingRootId.value = null; rootDragOrigin = null }
-  touchState.value = null
+  // If one finger lifted during pinch, switch back to pan mode
+  if (e?.touches?.length === 1) {
+    touchState.value = {
+      type: 'pan',
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY,
+      panX: panX.value,
+      panY: panY.value,
+    }
+  } else {
+    touchState.value = null
+  }
 }
 
 // ── Zoom ──────────────────────────────────────────────────────────────────
 function onWheel(e) { scale.value = Math.min(2, Math.max(0.2, scale.value - e.deltaY * 0.001)) }
 function zoomIn()   { scale.value = Math.min(2,  +(scale.value + 0.1).toFixed(2)) }
 function zoomOut()  { scale.value = Math.max(0.2, +(scale.value - 0.1).toFixed(2)) }
-function resetView(){ scale.value = 0.85; panX.value = 80; panY.value = 60 }
+function resetView() {
+  if (window.innerWidth < 768 && visibleTrees.value.length) {
+    scale.value = 0.55
+    nextTick(() => {
+      const rootId = visibleTrees.value[0].id
+      const el = canvasRef.value?.querySelector(`[data-person-id="${rootId}"]`)
+      if (!el || !containerRef.value) return
+      const containerRect = containerRef.value.getBoundingClientRect()
+      const canvasRect    = canvasRef.value.getBoundingClientRect()
+      const elRect        = el.getBoundingClientRect()
+      const elCX = (elRect.left - canvasRect.left + elRect.width  / 2) / scale.value
+      const elCY = (elRect.top  - canvasRect.top  + elRect.height / 2) / scale.value
+      panX.value = containerRect.width  / 2 - elCX * scale.value
+      panY.value = containerRect.height / 4 - elCY * scale.value
+      scheduleLineUpdate()
+    })
+  } else {
+    scale.value = 0.85
+    panX.value  = 80
+    panY.value  = 60
+  }
+}
 
 // ── Grid background ───────────────────────────────────────────────────────
 const gridStyle = computed(() => {
