@@ -14,20 +14,20 @@ Route::post('/auth/login',    [AuthController::class, 'login']);
 // Public share route
 Route::get('/share/{token}/tree', [PersonController::class, 'publicTree']);
 
+Route::get('/tree',      [PersonController::class, 'roots']);
+Route::get('/tree/{id}', [PersonController::class, 'tree']);
+Route::get('/people',    [PersonController::class, 'index']);
+Route::get('/people/{id}', [PersonController::class, 'show']);
+Route::get('/marriages/{personId}', [MarriageController::class, 'getByPerson']);
+Route::post('/relationships/check', [RelationshipController::class, 'check']);
+
+Route::post('/auth/logout',                  [AuthController::class, 'logout']);
+Route::post('/auth/change-password',         [AuthController::class, 'changePassword']);
+Route::post('/auth/regenerate-share-token',  [AuthController::class, 'regenerateShareToken']);
+
 // Authenticated routes
-//Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/auth/logout',                  [AuthController::class, 'logout']);
+Route::middleware('auth:sanctum')->group(function () {
     Route::get('/auth/me',                       [AuthController::class, 'me']);
-    Route::post('/auth/change-password',         [AuthController::class, 'changePassword']);
-    Route::post('/auth/regenerate-share-token',  [AuthController::class, 'regenerateShareToken']);
-
-    Route::get('/tree',      [PersonController::class, 'roots']);
-    Route::get('/tree/{id}', [PersonController::class, 'tree']);
-    Route::get('/people',    [PersonController::class, 'index']);
-    Route::get('/people/{id}', [PersonController::class, 'show']);
-    Route::get('/marriages/{personId}', [MarriageController::class, 'getByPerson']);
-    Route::post('/relationships/check', [RelationshipController::class, 'check']);
-
     // Admin-only write routes
     Route::middleware(EnsureIsAdmin::class)->group(function () {
         Route::post('/people',           [PersonController::class, 'store']);
@@ -39,4 +39,4 @@ Route::get('/share/{token}/tree', [PersonController::class, 'publicTree']);
         Route::post('/marriages',        [MarriageController::class, 'store']);
         Route::delete('/marriages/{id}', [MarriageController::class, 'destroy']);
     });
-//});
+});
