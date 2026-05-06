@@ -19,7 +19,10 @@
       "Bash(netstat -ano)",
       "Bash(tasklist:*)",
       "Bash(powershell:*)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(Get-ChildItem \"D:\\\\LocalServer\\\\Family Tree System\\\\frontend\\\\src\" -Recurse -File)",
+      "Bash(Select-Object FullName)",
+      "Bash(Format-Table -AutoSize)"
     ]
   }
 }

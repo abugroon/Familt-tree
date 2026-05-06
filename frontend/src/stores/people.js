@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import axios from 'axios'
 
-const api = axios.create({ baseURL: 'https://familyapi.moawiaabugroon.com/api' })
+const api = axios.create({ baseURL: import.meta.env.VITE_API_URL })
 
 // Attach auth token to every request
 api.interceptors.request.use(cfg => {

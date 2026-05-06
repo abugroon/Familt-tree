@@ -104,8 +104,9 @@
       </template>
     </div><!-- end couple row -->
 
-    <!-- ── Add child button ────────────────────────────────────────────── -->
+    <!-- ── Add child button — admin only ─────────────────────────────── -->
     <button
+      v-if="authStore.isAdmin"
       type="button"
       class="person-card mt-2 flex items-center gap-1 px-3 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-white dark:bg-slate-800 border border-emerald-300 dark:border-emerald-700 rounded-full shadow-sm hover:bg-emerald-50 dark:hover:bg-emerald-900/30 active:scale-95 transition-all"
       @click="showChildModal = true"
@@ -150,6 +151,7 @@ import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import PersonCard from './PersonCard.vue'
 import AddChildModal from './AddChildModal.vue'
 import { useFocusNode } from '@/composables/useFocusNode'
+import { useAuthStore } from '@/stores/auth'
 
 const props = defineProps({
   node:  { type: Object, required: true },
@@ -303,6 +305,7 @@ const childrenGap = computed(() => {
 // ── Add child modal ────────────────────────────────────────────────────────
 const showChildModal = ref(false)
 const { focusNode }  = useFocusNode()
+const authStore      = useAuthStore()
 
 function onChildSaved() {
   showChildModal.value = false

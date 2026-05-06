@@ -12,7 +12,6 @@ const routes = [
     path: '/',
     name: 'app',
     component: () => import('@/views/AppView.vue'),
-    meta: { requiresAuth: true },
   },
   {
     path: '/share/:token',

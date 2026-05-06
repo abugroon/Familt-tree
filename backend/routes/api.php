@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\MarriageController;
 use App\Http\Controllers\PersonController;
 use App\Http\Controllers\RelationshipController;
+use App\Http\Middleware\EnsureIsAdmin;
 use Illuminate\Support\Facades\Route;
 
 // Public auth routes
@@ -22,13 +23,20 @@ Route::get('/share/{token}/tree', [PersonController::class, 'publicTree']);
 
     Route::get('/tree',      [PersonController::class, 'roots']);
     Route::get('/tree/{id}', [PersonController::class, 'tree']);
-    Route::apiResource('people', PersonController::class);
+    Route::get('/people',    [PersonController::class, 'index']);
+    Route::get('/people/{id}', [PersonController::class, 'show']);
+    Route::get('/marriages/{personId}', [MarriageController::class, 'getByPerson']);
+    Route::post('/relationships/check', [RelationshipController::class, 'check']);
 
-    // Marriage routes
-    Route::post('/marriages',              [MarriageController::class, 'store']);
-    Route::get('/marriages/{personId}',    [MarriageController::class, 'getByPerson']);
-    Route::delete('/marriages/{id}',       [MarriageController::class, 'destroy']);
+    // Admin-only write routes
+    Route::middleware(EnsureIsAdmin::class)->group(function () {
+        Route::post('/people',           [PersonController::class, 'store']);
+        Route::put('/people/{id}',       [PersonController::class, 'update']);
+        Route::patch('/people/{id}',     [PersonController::class, 'update']);
+        Route::post('/people/{id}',      [PersonController::class, 'update']); // _method=PUT
+        Route::delete('/people/{id}',    [PersonController::class, 'destroy']);
 
-    // Relationship detection
-    Route::post('/relationships/check',    [RelationshipController::class, 'check']);
+        Route::post('/marriages',        [MarriageController::class, 'store']);
+        Route::delete('/marriages/{id}', [MarriageController::class, 'destroy']);
+    });
 //});

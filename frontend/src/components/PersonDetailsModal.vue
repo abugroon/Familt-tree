@@ -193,8 +193,9 @@
                   <div class="text-sm font-bold text-amber-800 dark:text-amber-200 truncate">{{ person.spouse.name }}</div>
                 </div>
               </div>
-              <!-- Unlink button -->
+              <!-- Unlink button — admin only -->
               <button
+                v-if="authStore.isAdmin"
                 @click="unlinkSpouse"
                 :disabled="unlinkingSpouse"
                 class="flex-shrink-0 p-1.5 rounded-lg bg-white dark:bg-slate-800 border border-red-200 dark:border-red-800/50 text-red-400 hover:text-red-600 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-40 transition-colors"
@@ -210,8 +211,8 @@
               </button>
             </div>
 
-            <!-- No spouse — show link button -->
-            <div v-else>
+            <!-- No spouse — show link button (admin only) -->
+            <div v-else-if="authStore.isAdmin">
               <button
                 @click="showLinkSpouseForm = !showLinkSpouseForm"
                 class="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-2xl border-2 border-dashed border-amber-200 dark:border-amber-800/50 text-amber-500 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 text-sm font-semibold transition-colors"
@@ -339,8 +340,8 @@
 
         </div><!-- end scrollable content -->
 
-        <!-- Footer actions -->
-        <div class="px-6 py-4 bg-gray-50 dark:bg-slate-800/50 border-t border-gray-100 dark:border-slate-700/50 flex gap-3">
+        <!-- Footer actions — admin only -->
+        <div v-if="authStore.isAdmin" class="px-6 py-4 bg-gray-50 dark:bg-slate-800/50 border-t border-gray-100 dark:border-slate-700/50 flex gap-3">
           <button
             @click="openEdit"
             class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 border border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white text-sm font-semibold transition-all active:scale-95 shadow-sm"
@@ -407,6 +408,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { usePeopleStore } from '@/stores/people'
+import { useAuthStore } from '@/stores/auth'
 import AddPersonModal from './AddPersonModal.vue'
 
 const props = defineProps({
@@ -416,7 +418,8 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'deleted', 'edit', 'view-person', 'marriage-changed'])
 
-const store = usePeopleStore()
+const store     = usePeopleStore()
+const authStore = useAuthStore()
 
 const showDeleteConfirm  = ref(false)
 const showEditModal      = ref(false)

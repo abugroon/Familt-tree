@@ -24,6 +24,7 @@ class User extends Authenticatable
         'email',
         'password',
         'share_token',
+        'is_admin',
     ];
 
     /**
@@ -45,7 +46,8 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'password'          => 'hashed',
+            'is_admin'          => 'boolean',
         ];
     }
 }

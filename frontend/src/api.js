@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-export const api = axios.create({ baseURL: 'https://familyapi.moawiaabugroon.com/api' })
+export const api = axios.create({ baseURL: import.meta.env.VITE_API_URL })
 
 api.interceptors.request.use(cfg => {
   const t = localStorage.getItem('auth_token')
